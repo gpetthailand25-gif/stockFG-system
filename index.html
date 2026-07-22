@@ -201,12 +201,102 @@ tr:hover td{background:#FCF9F4;}
 .checkbox-row input{width:auto;}
 @media(max-width:900px){
   .app{flex-direction:column;}
-  .sidebar{width:100%;flex-direction:row;overflow-x:auto;padding:12px;}
-  .brand{padding:4px 10px;}
-  .nav-spacer{display:none;}
   .form-grid{grid-template-columns:1fr;}
-  .kpi-row{grid-template-columns:1fr 1fr;}
-  .main{padding:18px;}
+  .main{padding:16px 14px calc(96px + env(safe-area-inset-bottom));}
+
+  /* ---- Sidebar becomes a fixed bottom nav bar ---- */
+  .sidebar{
+    position:fixed; left:0; right:0; bottom:0; top:auto; width:100%;
+    flex-direction:row; flex-wrap:nowrap; gap:0; overflow:hidden;
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    max-height:66px; z-index:80; align-items:stretch;
+    box-shadow:0 -6px 20px rgba(74,35,51,.16);
+    transition:max-height .22s ease;
+  }
+  .sidebar .brand, .sidebar .sidebar-foot, .sidebar .nav-spacer{display:none;}
+  .sidebar .nav-item{
+    flex:1 1 20%; flex-direction:column; justify-content:center; gap:3px;
+    padding:6px 2px; font-size:10.5px; text-align:center; border-radius:10px; opacity:.75;
+  }
+  .sidebar .nav-item.active{background:transparent;color:var(--caramel-light);opacity:1;}
+  .sidebar .nav-item .nav-icon{width:20px;height:20px;}
+  /* Only the 4 most-used destinations stay visible in the bar; the rest live behind "more" */
+  .sidebar .nav-item[data-view="po"],
+  .sidebar .nav-item[data-view="wr"],
+  .sidebar .nav-item[data-view="count"],
+  .sidebar .nav-item[data-view="adjust"],
+  .sidebar .nav-item[data-view="products"],
+  .sidebar .nav-item[data-view="locations"]{ display:none; }
+
+  .nav-more-toggle{
+    flex:1 1 20%; display:flex; flex-direction:column; justify-content:center; align-items:center;
+    gap:3px; padding:6px 2px; font-size:10.5px; color:#F3E8DE; opacity:.75; border-radius:10px; cursor:pointer;
+  }
+  .nav-more-toggle svg{width:20px;height:20px;}
+  .nav-more-toggle.active{opacity:1;color:var(--caramel-light);}
+
+  body.mobile-more-open .sidebar{
+    max-height:72vh; flex-wrap:wrap; overflow-y:auto; align-content:flex-start; padding-top:16px;
+  }
+  body.mobile-more-open .sidebar .nav-item,
+  body.mobile-more-open .nav-more-toggle{ display:flex !important; flex:1 1 28%; }
+  .mobile-more-backdrop{
+    position:fixed; inset:0; background:rgba(43,32,24,.45); z-index:70; display:none;
+  }
+  body.mobile-more-open .mobile-more-backdrop{ display:block; }
+
+  /* ---- KPI row: swipeable strip instead of a squeezed grid ---- */
+  .kpi-row{
+    display:flex; grid-template-columns:none; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory;
+    padding-bottom:4px; margin:0 -14px 20px; padding-left:14px; padding-right:14px;
+  }
+  .kpi-row .kpi{flex:0 0 76%; scroll-snap-align:start;}
+
+  /* ---- Forms: full-width, thumb-reachable action buttons ---- */
+  .btn-row{flex-direction:column-reverse; gap:8px;}
+  .btn-row .btn{width:100%; padding:14px; text-align:center;}
+
+  /* ---- Tables become label/value cards (see labelMobileTables() in JS) ---- */
+  .table-wrap table, .table-wrap thead, .table-wrap tbody, .table-wrap tr, .table-wrap td{display:block; width:100%;}
+  .table-wrap thead{position:absolute; left:-9999px;}
+  .table-wrap tr{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:10px 12px; margin-bottom:10px; box-shadow:var(--shadow);
+  }
+  .table-wrap tr:hover td{background:transparent;}
+  .table-wrap td{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    border-bottom:1px dashed var(--line); padding:8px 2px; text-align:right;
+  }
+  .table-wrap td:last-child{border-bottom:none;}
+  .table-wrap td.num{justify-content:space-between;}
+  .table-wrap td[data-label]::before{
+    content:attr(data-label); font-size:11px; font-weight:700; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:.03em; text-align:left; flex-shrink:0; margin-right:10px;
+  }
+  .table-wrap td:not([data-label]){justify-content:flex-start; text-align:left;}
+
+  /* ---- Floating quick-action button (dashboard only) ---- */
+  .mobile-fab{
+    position:fixed; right:18px; bottom:78px; z-index:60; width:56px; height:56px; border-radius:50%;
+    background:var(--caramel); color:var(--plum); border:none; box-shadow:0 8px 20px rgba(192,138,62,.5);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .mobile-fab svg{width:24px;height:24px;}
+  .mobile-fab-menu{
+    position:fixed; right:18px; bottom:142px; z-index:60; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; box-shadow:0 10px 26px rgba(74,35,51,.2); overflow:hidden; display:none; min-width:168px;
+  }
+  .mobile-fab-menu.open{display:block;}
+  .mobile-fab-menu button{
+    width:100%; display:flex; align-items:center; gap:9px; padding:12px 14px; border:none; background:none;
+    font-family:'Prompt'; font-weight:600; font-size:13.5px; color:var(--ink); text-align:left; border-bottom:1px solid var(--line);
+  }
+  .mobile-fab-menu button:last-child{border-bottom:none;}
+  .mobile-fab-menu button svg{width:17px;height:17px;flex-shrink:0;}
+}
+@media(min-width:901px){
+  .nav-more-toggle, .mobile-more-backdrop, .mobile-fab, .mobile-fab-menu{display:none !important;}
 }
 .ac-input-wrap{position:relative;}
 .ac-input-wrap input{padding-right:38px;}
@@ -277,6 +367,20 @@ tr:hover td{background:#FCF9F4;}
     </div>
     <div class="nav-spacer"></div>
     <div class="sidebar-foot">ข้อมูลบันทึกและแชร์ร่วมกันทุกคนที่เปิดหน้านี้</div>
+    <div class="nav-more-toggle" id="navMoreToggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      เพิ่มเติม
+    </div>
+  </div>
+  <div class="mobile-more-backdrop" id="mobileMoreBackdrop"></div>
+
+  <button class="mobile-fab" id="mobileFab" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+  <div class="mobile-fab-menu" id="mobileFabMenu">
+    <button data-goto="stockin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>รับเข้า</button>
+    <button data-goto="stockout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>ตัดออก</button>
+    <button data-goto="count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 1.5 1.5L11 8"/></svg>นับสต็อก</button>
   </div>
 
   <div class="main">
@@ -13922,8 +14026,74 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if(view === 'count') renderCountHistory();
     if(view === 'adjust'){ populateAdjCountOptions(); renderAdjustHistory(); }
     if(view === 'locations') renderLocations();
+    document.body.classList.remove('mobile-more-open');
+    const toggle = document.getElementById('navMoreToggle');
+    if(toggle) toggle.classList.remove('active');
+    updateMobileFab(view);
+    window.scrollTo(0,0);
   });
 });
+
+/* ============ MOBILE UX LAYER ============ */
+(function(){
+  const toggle = document.getElementById('navMoreToggle');
+  const backdrop = document.getElementById('mobileMoreBackdrop');
+  const fab = document.getElementById('mobileFab');
+  const fabMenu = document.getElementById('mobileFabMenu');
+
+  function closeMore(){
+    document.body.classList.remove('mobile-more-open');
+    if(toggle) toggle.classList.remove('active');
+  }
+  if(toggle){
+    toggle.addEventListener('click', () => {
+      const open = document.body.classList.toggle('mobile-more-open');
+      toggle.classList.toggle('active', open);
+    });
+  }
+  if(backdrop) backdrop.addEventListener('click', closeMore);
+
+  window.updateMobileFab = function(view){
+    if(!fab) return;
+    fab.style.display = (view === 'dashboard') ? 'flex' : 'none';
+    if(fabMenu) fabMenu.classList.remove('open');
+  };
+  if(fab){
+    fab.addEventListener('click', () => fabMenu.classList.toggle('open'));
+  }
+  if(fabMenu){
+    fabMenu.querySelectorAll('[data-goto]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        fabMenu.classList.remove('open');
+        const target = document.querySelector('.nav-item[data-view="' + btn.dataset.goto + '"]');
+        if(target) target.click();
+      });
+    });
+  }
+  updateMobileFab('dashboard');
+
+  /* Give every table's <td> a data-label matching its column header, so the
+     mobile CSS (@media max-width:900px) can render rows as label/value cards
+     instead of a horizontally-scrolling table. Runs once, then re-applies
+     automatically whenever a render*() function rebuilds a tbody. */
+  function labelTable(table){
+    const headers = [...table.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      [...tr.children].forEach((td, i) => {
+        if(headers[i]) td.setAttribute('data-label', headers[i]);
+        else td.removeAttribute('data-label');
+      });
+    });
+  }
+  function labelAllTables(){
+    document.querySelectorAll('.table-wrap table').forEach(labelTable);
+  }
+  const mainEl = document.querySelector('.main');
+  if(mainEl){
+    new MutationObserver(labelAllTables).observe(mainEl, {childList:true, subtree:true});
+  }
+  labelAllTables();
+})();
 
 /* ============ BALANCE CALC ============ */
 function computeBalances(){
