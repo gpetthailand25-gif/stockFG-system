@@ -237,6 +237,14 @@ tr:hover td{background:#FCF9F4;}
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2h6a1 1 0 0 1 1 1v1H8V3a1 1 0 0 1 1-1Z"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><path d="m9 13 2 2 4-4"/></svg>
       ใบสั่งเบิก
     </div>
+    <div class="nav-item" data-view="count">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 1.5 1.5L11 8"/><path d="M13 9h4"/><path d="m7 15 1.5 1.5L11 14"/><path d="M13 15h4"/></svg>
+      นับสต็อก
+    </div>
+    <div class="nav-item" data-view="adjust">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h6M4 12h10M4 18h6"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="18" r="2"/><circle cx="18" cy="12" r="2"/></svg>
+      ปรับสต็อก
+    </div>
     <div class="nav-item" data-view="history">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
       ประวัติ
@@ -605,6 +613,126 @@ tr:hover td{background:#FCF9F4;}
       </div>
     </div>
 
+    <!-- STOCK COUNT -->
+    <div class="view" id="view-count">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">นับสต็อก</h1>
+          <p class="page-sub">เพิ่มสินค้าที่ต้องการนับ กรอกยอดที่นับได้จริง ระบบจะเทียบกับยอดในระบบและปรับยอดให้อัตโนมัติเมื่อบันทึก</p>
+        </div>
+      </div>
+      <div class="panel">
+        <span class="section-tag">รอบนับสต็อกใหม่</span>
+        <div class="form-grid">
+          <div class="field">
+            <label>วันที่นับ *</label>
+            <input type="date" id="countDate">
+          </div>
+          <div class="field full">
+            <label>หมายเหตุ</label>
+            <input type="text" id="countNote" placeholder="ไม่บังคับ เช่น นับประจำเดือน / นับก่อนปิดยอด">
+          </div>
+          <div class="field full">
+            <label>รายการสินค้าที่นับ * <span style="font-weight:400;text-transform:none;">(ยอดตามระบบจะขึ้นให้อัตโนมัติเมื่อเลือกสินค้า)</span></label>
+            <div id="countItemRows"></div>
+            <button type="button" class="btn btn-ghost btn-sm" id="countAddItemBtn" style="margin-top:4px;">+ เพิ่มสินค้า</button>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="countClearBtn">ล้างฟอร์ม</button>
+          <button class="btn btn-primary" id="countSubmitBtn">บันทึกผลนับสต็อก</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">ประวัติการนับสต็อก</div>
+        <p class="panel-sub">ดูผลต่างที่พบและรายการปรับยอดที่เกิดจากการนับแต่ละรอบ</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="exp-cell"></th><th>วันที่นับ</th><th style="text-align:right">จำนวนรายการ</th><th style="text-align:right">รายการที่ต่างจากระบบ</th><th>หมายเหตุ</th><th></th></tr></thead>
+            <tbody id="countTableBody"></tbody>
+          </table>
+          <div class="empty-state" id="countEmpty" style="display:none">ยังไม่มีประวัติการนับสต็อก</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STOCK ADJUST -->
+    <div class="view" id="view-adjust">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">ปรับสต็อก</h1>
+          <p class="page-sub">แก้ไขยอดคงเหลือของสินค้า/LOT ให้ตรงกับยอดจริง ระบบจะคำนวณส่วนต่างและบันทึกรับเข้า/ตัดออกให้อัตโนมัติ</p>
+        </div>
+      </div>
+      <div class="panel" style="max-width:640px">
+        <span class="section-tag">แบบฟอร์มปรับสต็อก</span>
+        <div class="form-grid">
+          <div class="field full ac-wrap">
+            <label>สินค้า *</label>
+            <input type="text" id="adjProductSearch" placeholder="พิมพ์ชื่อหรือรหัสสินค้า..." autocomplete="off">
+            <div class="ac-list" id="adjAcList"></div>
+          </div>
+          <div class="field full">
+            <label>LOT <span style="font-weight:400;text-transform:none;">(เว้นว่าง = ปรับยอดที่ไม่ระบุ LOT)</span></label>
+            <input type="text" id="adjLot" list="adjLotOptions" placeholder="เลือกสินค้าก่อน" disabled>
+            <datalist id="adjLotOptions"></datalist>
+          </div>
+          <div class="field">
+            <label>ยอดตามระบบปัจจุบัน</label>
+            <input type="text" id="adjCurrentQty" placeholder="-" readonly style="background:var(--cream);">
+          </div>
+          <div class="field">
+            <label>ยอดที่ถูกต้อง (นับได้จริง) *</label>
+            <input type="number" id="adjNewQty" min="0" step="any" placeholder="0">
+          </div>
+          <div class="field">
+            <label>สาเหตุการปรับ *</label>
+            <select id="adjReason">
+              <option value="นับสต็อกไม่ตรง">นับสต็อกไม่ตรง</option>
+              <option value="สินค้าเสียหาย/ตกหล่น">สินค้าเสียหาย / ตกหล่น</option>
+              <option value="บันทึกข้อมูลผิดพลาดก่อนหน้า">บันทึกข้อมูลผิดพลาดก่อนหน้า</option>
+              <option value="อื่นๆ">อื่นๆ</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>วันที่ปรับ *</label>
+            <input type="date" id="adjDate">
+          </div>
+          <div class="field full">
+            <label>หมายเหตุ</label>
+            <input type="text" id="adjNote" placeholder="ไม่บังคับ">
+          </div>
+        </div>
+        <div class="small-note" id="adjDiffHint">เลือกสินค้าเพื่อดูยอดคงเหลือปัจจุบัน</div>
+        <div id="adjLotTableWrap" style="display:none;margin-top:14px;">
+          <div style="font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;">คงเหลือแยกตาม LOT (คลิกเพื่อเลือก)</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>LOT</th><th style="text-align:right">คงเหลือ</th><th>วันที่รับเข้า</th><th>หมดอายุ</th><th>สถานที่</th></tr></thead>
+              <tbody id="adjLotTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="adjClearBtn">ล้างฟอร์ม</button>
+          <button class="btn btn-primary" id="adjSubmitBtn">บันทึกการปรับสต็อก</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">ประวัติการปรับสต็อกล่าสุด</div>
+        <p class="panel-sub">รายการรับเข้า/ตัดออกที่เกิดจากการปรับสต็อกโดยตรงในหน้านี้ (ไม่รวมรายการที่เกิดจากรอบนับสต็อก)</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>วันที่</th><th>ประเภท</th><th>รหัสสินค้า</th><th>ชื่อสินค้า</th><th>LOT</th><th style="text-align:right">จำนวน</th><th>สาเหตุ/หมายเหตุ</th><th></th></tr></thead>
+            <tbody id="adjHistTableBody"></tbody>
+          </table>
+          <div class="empty-state" id="adjHistEmpty" style="display:none">ยังไม่มีประวัติการปรับสต็อก</div>
+        </div>
+      </div>
+    </div>
+
     <!-- HISTORY -->
     <div class="view" id="view-history">
       <div class="topbar">
@@ -924,12 +1052,14 @@ let PRODUCT_IMAGES = {};
 let PRODUCT_EXTRA = {};
 let PRODUCTION_ORDERS = [];
 let WITHDRAWAL_REQUESTS = [];
+let STOCK_COUNTS = [];
 let LOCATIONS = [];
 const STORAGE_KEY = 'fg_transactions';
 const IMAGES_KEY = 'fg_product_images';
 const EXTRA_KEY = 'fg_product_extra';
 const PO_KEY = 'fg_production_orders';
 const WR_KEY = 'fg_withdrawal_requests';
+const COUNT_KEY = 'fg_stock_counts';
 const LOC_KEY = 'fg_locations';
 
 function todayStr(){
@@ -976,6 +1106,12 @@ async function loadTransactions(){
     WITHDRAWAL_REQUESTS = res && res.value ? JSON.parse(res.value) : [];
   }catch(e){
     WITHDRAWAL_REQUESTS = [];
+  }
+  try{
+    const res = await window.storage.get(COUNT_KEY, true);
+    STOCK_COUNTS = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    STOCK_COUNTS = [];
   }
   try{
     const res = await window.storage.get(LOC_KEY, true);
@@ -1115,6 +1251,14 @@ async function saveWRs(){
   }
 }
 
+async function saveStockCounts(){
+  try{
+    await window.storage.set(COUNT_KEY, JSON.stringify(STOCK_COUNTS), true);
+  }catch(e){
+    showToast('บันทึกประวัติการนับสต็อกไม่สำเร็จ ลองอีกครั้ง', true);
+  }
+}
+
 /* Merge saved edits (name/unit/active/shelfLife/storage) onto the base product records */
 function applyProductExtras(){
   Object.keys(PRODUCT_EXTRA).forEach(id => {
@@ -1184,6 +1328,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if(view === 'wr') renderWR();
     if(view === 'stockin') populateInPoOptions();
     if(view === 'stockout'){ populateOutWrOptions(); }
+    if(view === 'count') renderCountHistory();
+    if(view === 'adjust') renderAdjustHistory();
     if(view === 'locations') renderLocations();
   });
 });
@@ -1287,6 +1433,25 @@ function computeLotBalances(productId){
     }
   });
   return Object.values(map).map(m => ({...m, balance: round2(m.inQty - m.outQty)}));
+}
+
+/* Total balance for a product across all LOTs (used by stock count & adjust) */
+function getProductSystemQty(productId){
+  let inQty = 0, outQty = 0;
+  TRANSACTIONS.forEach(t => {
+    if(t.productId !== productId) return;
+    if(t.type === 'in') inQty += Number(t.qty);
+    else outQty += Number(t.qty);
+  });
+  return round2(inQty - outQty);
+}
+
+/* Balance for a single LOT of a product (blank lot = "not specified" bucket) */
+function getLotBalance(productId, lot){
+  const lots = computeLotBalances(productId);
+  const lotKey = (lot || '').trim();
+  const found = lots.find(l => (l.lot || '') === lotKey);
+  return found ? found.balance : 0;
 }
 
 /* ============ AUTOCOMPLETE ============ */
@@ -3400,6 +3565,389 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* ============ STOCK COUNT ============ */
+document.getElementById('countDate').value = todayStr();
+
+const countItemAcMap = new Map();
+let countRowCounter = 0;
+
+function updateCountRowDiff(row){
+  const sysqtyInput = row.querySelector('.count-item-sysqty');
+  const diffInput = row.querySelector('.count-item-diff');
+  const qtyInput = row.querySelector('.count-item-qty');
+  const sysQty = parseFloat(sysqtyInput.dataset.value || '0');
+  if(qtyInput.value === '' || isNaN(parseFloat(qtyInput.value))){
+    diffInput.value = '';
+    diffInput.style.color = '';
+    diffInput.style.fontWeight = '400';
+    return;
+  }
+  const counted = parseFloat(qtyInput.value);
+  const diff = round2(counted - sysQty);
+  diffInput.value = (diff > 0 ? '+' : '') + fmt(diff);
+  diffInput.style.color = diff > 0 ? 'var(--ok)' : (diff < 0 ? 'var(--danger)' : 'var(--ink-soft)');
+  diffInput.style.fontWeight = diff !== 0 ? '600' : '400';
+}
+
+function addCountItemRow(){
+  const rowId = 'countrow' + (countRowCounter++);
+  const wrap = document.getElementById('countItemRows');
+  const row = document.createElement('div');
+  row.className = 'count-item-row ac-wrap';
+  row.dataset.rowId = rowId;
+  row.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;position:relative;flex-wrap:wrap;';
+  row.innerHTML = `
+    <div class="field" style="flex:2 1 220px;margin-bottom:0;">
+      <input type="text" class="count-item-search" id="${rowId}_search" placeholder="พิมพ์ชื่อหรือรหัสสินค้า..." autocomplete="off">
+      <div class="ac-list" id="${rowId}_ac"></div>
+    </div>
+    <div class="field" style="flex:0 0 130px;margin-bottom:0;">
+      <input type="text" class="count-item-sysqty" placeholder="ยอดตามระบบ" readonly style="text-align:right;background:var(--cream);" data-value="0">
+    </div>
+    <div class="field" style="flex:0 0 110px;margin-bottom:0;">
+      <input type="number" min="0" step="any" class="count-item-qty" placeholder="นับได้จริง">
+    </div>
+    <div class="field" style="flex:0 0 80px;margin-bottom:0;">
+      <input type="text" class="count-item-unit" placeholder="หน่วย" readonly>
+    </div>
+    <div class="field" style="flex:0 0 130px;margin-bottom:0;">
+      <input type="text" class="count-item-diff" placeholder="ผลต่าง" readonly style="text-align:right;">
+    </div>
+    <button type="button" class="btn btn-ghost btn-sm count-item-remove-btn" style="flex:0 0 auto;height:41px;">✕</button>
+  `;
+  wrap.appendChild(row);
+  const sysqtyInput = row.querySelector('.count-item-sysqty');
+  const unitInput = row.querySelector('.count-item-unit');
+  const qtyInput = row.querySelector('.count-item-qty');
+  const diffInput = row.querySelector('.count-item-diff');
+  const ac = setupAutocomplete(`${rowId}_search`, `${rowId}_ac`, null, (p) => {
+    if(p){
+      const sysQty = getProductSystemQty(p.id);
+      sysqtyInput.dataset.value = sysQty;
+      sysqtyInput.value = `${fmt(sysQty)} ${p.unit || ''}`.trim();
+      unitInput.value = p.unit || '';
+    } else {
+      sysqtyInput.dataset.value = '0';
+      sysqtyInput.value = '';
+      unitInput.value = '';
+    }
+    qtyInput.value = '';
+    updateCountRowDiff(row);
+  });
+  countItemAcMap.set(rowId, ac);
+  qtyInput.addEventListener('input', () => updateCountRowDiff(row));
+  row.querySelector('.count-item-remove-btn').addEventListener('click', () => {
+    countItemAcMap.delete(rowId);
+    row.remove();
+  });
+}
+
+document.getElementById('countAddItemBtn').addEventListener('click', () => addCountItemRow());
+
+function resetCountItemRows(){
+  document.getElementById('countItemRows').innerHTML = '';
+  countItemAcMap.clear();
+  addCountItemRow();
+}
+resetCountItemRows();
+
+document.getElementById('countClearBtn').addEventListener('click', () => {
+  document.getElementById('countNote').value = '';
+  document.getElementById('countDate').value = todayStr();
+  resetCountItemRows();
+});
+
+document.getElementById('countSubmitBtn').addEventListener('click', async () => {
+  const date = document.getElementById('countDate').value;
+  if(!date){ showToast('กรุณาระบุวันที่นับ', true); return; }
+
+  const rows = [...document.querySelectorAll('#countItemRows .count-item-row')];
+  const items = [];
+  for(const row of rows){
+    const rowId = row.dataset.rowId;
+    const ac = countItemAcMap.get(rowId);
+    const p = ac ? ac.getSelected() : null;
+    const qtyInput = row.querySelector('.count-item-qty');
+    const qtyRaw = qtyInput.value;
+    const hasAny = p || (qtyRaw !== '' && qtyRaw !== null);
+    if(!hasAny) continue;
+    if(!p){ showToast('กรุณาเลือกสินค้าให้ครบทุกแถวที่กรอกจำนวน', true); return; }
+    if(qtyRaw === '' || qtyRaw === null){ showToast(`กรุณาระบุยอดที่นับได้ของ "${p.name}"`, true); return; }
+    const counted = parseFloat(qtyRaw);
+    if(isNaN(counted) || counted < 0){ showToast(`ยอดที่นับได้ของ "${p.name}" ไม่ถูกต้อง`, true); return; }
+    const systemQty = getProductSystemQty(p.id);
+    items.push({ productId: p.id, productName: p.name, unit: p.unit, systemQty: round2(systemQty), countedQty: round2(counted), diff: round2(counted - systemQty) });
+  }
+  if(items.length === 0){ showToast('กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ', true); return; }
+  const productIdsLower = items.map(it => it.productId.toLowerCase());
+  if(new Set(productIdsLower).size !== productIdsLower.length){ showToast('มีสินค้าซ้ำกันในรอบนับเดียวกัน กรุณาแก้ไข', true); return; }
+
+  const note = document.getElementById('countNote').value.trim();
+  const countId = 'cnt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+
+  items.forEach(it => {
+    if(it.diff === 0) return;
+    const tx = {
+      id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      type: it.diff > 0 ? 'in' : 'out',
+      productId: it.productId,
+      productName: it.productName,
+      unit: it.unit,
+      qty: Math.abs(it.diff),
+      lot: '',
+      date: date,
+      note: `ปรับยอดจากการนับสต็อกวันที่ ${formatDate(date)}${note ? ' — ' + note : ''}`,
+      timestamp: new Date().toISOString(),
+      adjustment: true,
+      source: 'count',
+      countId: countId
+    };
+    if(tx.type === 'out') tx.reason = 'ปรับยอด';
+    TRANSACTIONS.push(tx);
+  });
+
+  const diffItems = items.filter(it => it.diff !== 0).length;
+  const countRec = {
+    id: countId,
+    countDate: date,
+    items: items,
+    note: note,
+    createdAt: new Date().toISOString()
+  };
+  STOCK_COUNTS.push(countRec);
+
+  await saveTransactions();
+  await saveStockCounts();
+  showToast(`บันทึกผลนับสต็อกสำเร็จ ${items.length} รายการ (พบผลต่าง ${diffItems} รายการ และปรับยอดให้แล้ว)`);
+  document.getElementById('countClearBtn').click();
+  renderAll();
+});
+
+const expandedCounts = new Set();
+function renderCountHistory(){
+  const tbody = document.getElementById('countTableBody');
+  const empty = document.getElementById('countEmpty');
+  if(!tbody) return;
+  const list = [...STOCK_COUNTS].sort((a,b) => (b.countDate||'').localeCompare(a.countDate||'') || (b.createdAt||'').localeCompare(a.createdAt||''));
+  if(list.length === 0){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map(c => {
+    const diffCount = c.items.filter(it => it.diff !== 0).length;
+    const isOpen = expandedCounts.has(c.id);
+    const itemBody = `<table class="lot-subtable">
+        <thead><tr><th>รหัสสินค้า</th><th>ชื่อสินค้า</th><th style="text-align:right">ยอดตามระบบ (ตอนนับ)</th><th style="text-align:right">นับได้จริง</th><th style="text-align:right">ผลต่าง</th></tr></thead>
+        <tbody>${c.items.map(it => `
+          <tr>
+            <td class="mono">${escapeHtml(it.productId)}</td>
+            <td>${escapeHtml(it.productName)}</td>
+            <td class="num">${fmt(it.systemQty)} ${escapeHtml(it.unit||'')}</td>
+            <td class="num">${fmt(it.countedQty)} ${escapeHtml(it.unit||'')}</td>
+            <td class="num"${it.diff!==0?` style="color:${it.diff>0?'var(--ok)':'var(--danger)'};font-weight:600;"`:''}>${it.diff>0?'+':''}${fmt(it.diff)}</td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+    return `<tr>
+        <td class="exp-cell">
+          <span class="exp-btn ${isOpen?'open':''}" data-toggle-count-id="${escapeHtml(c.id)}" title="ดูรายละเอียด">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+          </span>
+        </td>
+        <td>${formatDate(c.countDate)}</td>
+        <td class="num">${c.items.length}</td>
+        <td class="num">${diffCount ? `<span style="color:var(--warn);font-weight:600;">${diffCount}</span>` : '0'}</td>
+        <td>${escapeHtml(c.note || '-')}</td>
+        <td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="deleteStockCount('${c.id}')">ลบ</button></td>
+      </tr>
+      <tr class="lot-subrow ${isOpen?'open':''}" data-count-subrow-id="${escapeHtml(c.id)}">
+        <td colspan="6">${itemBody}</td>
+      </tr>`;
+  }).join('');
+}
+document.getElementById('countTableBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-toggle-count-id]');
+  if(!btn) return;
+  const id = btn.dataset.toggleCountId;
+  if(expandedCounts.has(id)) expandedCounts.delete(id); else expandedCounts.add(id);
+  renderCountHistory();
+});
+async function deleteStockCount(id){
+  const c = STOCK_COUNTS.find(x => x.id === id);
+  if(!c) return;
+  const ok = confirm(`ลบประวัติการนับสต็อกวันที่ ${formatDate(c.countDate)} ใช่หรือไม่?\n(รายการปรับยอดสต็อกที่เกิดจากรอบนับนี้จะยังคงอยู่ในประวัติการทำรายการตามปกติ)`);
+  if(!ok) return;
+  STOCK_COUNTS = STOCK_COUNTS.filter(x => x.id !== id);
+  await saveStockCounts();
+  showToast('ลบประวัติการนับสต็อกแล้ว');
+  renderCountHistory();
+}
+
+/* ============ STOCK ADJUST ============ */
+document.getElementById('adjDate').value = todayStr();
+let adjAC;
+
+function populateAdjLots(p){
+  const input = document.getElementById('adjLot');
+  const datalist = document.getElementById('adjLotOptions');
+  const tableWrap = document.getElementById('adjLotTableWrap');
+  const tableBody = document.getElementById('adjLotTableBody');
+
+  if(!p){
+    input.value = '';
+    input.disabled = true;
+    input.placeholder = 'เลือกสินค้าก่อน';
+    datalist.innerHTML = '';
+    tableWrap.style.display = 'none';
+    tableBody.innerHTML = '';
+    document.getElementById('adjCurrentQty').value = '';
+    updateAdjDiffHint();
+    return;
+  }
+
+  input.disabled = false;
+  input.placeholder = 'เว้นว่าง = ไม่ระบุ LOT';
+  const lots = computeLotBalances(p.id).filter(l => l.inQty > 0 || l.outQty > 0);
+  sortLotsFifo(lots);
+  datalist.innerHTML = lots.map(l => `<option value="${escapeHtml(l.lot)}">`).join('');
+
+  if(lots.length === 0){
+    tableWrap.style.display = 'none';
+    tableBody.innerHTML = '';
+  } else {
+    tableWrap.style.display = 'block';
+    tableBody.innerHTML = lots.map(l => `
+      <tr class="lot-row" data-lot="${escapeHtml(l.lot)}" style="cursor:pointer;">
+        <td class="mono">${l.lot ? escapeHtml(l.lot) : 'ไม่ระบุ LOT'}</td>
+        <td class="num"${l.balance < 0 ? ' style="color:var(--danger);font-weight:600;"' : ''}>${fmt(l.balance)}</td>
+        <td>${l.inDate ? formatDate(l.inDate) : '-'}</td>
+        <td>${l.expiry ? formatDate(l.expiry) : '-'}</td>
+        <td>${escapeHtml(l.location || '-')}</td>
+      </tr>`).join('');
+  }
+  updateAdjCurrentQty();
+}
+
+function updateAdjCurrentQty(){
+  const p = adjAC.getSelected();
+  const currentQtyInput = document.getElementById('adjCurrentQty');
+  if(!p){ currentQtyInput.value = ''; updateAdjDiffHint(); return; }
+  const lotVal = document.getElementById('adjLot').value.trim();
+  const bal = getLotBalance(p.id, lotVal);
+  currentQtyInput.value = `${fmt(bal)} ${p.unit || ''}`.trim();
+  updateAdjDiffHint();
+}
+
+function updateAdjDiffHint(){
+  const hint = document.getElementById('adjDiffHint');
+  const p = adjAC.getSelected();
+  if(!p){ hint.textContent = 'เลือกสินค้าเพื่อดูยอดคงเหลือปัจจุบัน'; return; }
+  const lotVal = document.getElementById('adjLot').value.trim();
+  const bal = getLotBalance(p.id, lotVal);
+  const newValRaw = document.getElementById('adjNewQty').value;
+  const lotLabel = lotVal ? `LOT ${escapeHtml(lotVal)}` : '(ไม่ระบุ LOT)';
+  if(newValRaw === '' || isNaN(parseFloat(newValRaw))){
+    hint.innerHTML = `ยอดปัจจุบัน ${lotLabel}: <strong>${fmt(bal)} ${escapeHtml(p.unit||'')}</strong> — กรอกยอดที่ถูกต้องเพื่อดูส่วนต่าง`;
+    return;
+  }
+  const newVal = parseFloat(newValRaw);
+  const diff = round2(newVal - bal);
+  if(diff === 0){
+    hint.innerHTML = `ยอดปัจจุบัน ${lotLabel}: <strong>${fmt(bal)} ${escapeHtml(p.unit||'')}</strong> — ไม่มีส่วนต่าง ไม่ต้องบันทึก`;
+  } else if(diff > 0){
+    hint.innerHTML = `ยอดปัจจุบัน ${lotLabel}: <strong>${fmt(bal)} ${escapeHtml(p.unit||'')}</strong> → จะ<span style="color:var(--ok);font-weight:600;">รับเข้าเพิ่ม ${fmt(diff)} ${escapeHtml(p.unit||'')}</span>`;
+  } else {
+    hint.innerHTML = `ยอดปัจจุบัน ${lotLabel}: <strong>${fmt(bal)} ${escapeHtml(p.unit||'')}</strong> → จะ<span style="color:var(--danger);font-weight:600;">ตัดออก ${fmt(Math.abs(diff))} ${escapeHtml(p.unit||'')}</span>`;
+  }
+}
+
+adjAC = setupAutocomplete('adjProductSearch', 'adjAcList', null, (p) => {
+  document.getElementById('adjLot').value = '';
+  document.getElementById('adjNewQty').value = '';
+  populateAdjLots(p);
+});
+
+document.getElementById('adjLot').addEventListener('input', updateAdjCurrentQty);
+document.getElementById('adjNewQty').addEventListener('input', updateAdjDiffHint);
+document.getElementById('adjLotTableBody').addEventListener('click', (e) => {
+  const row = e.target.closest('.lot-row');
+  if(!row) return;
+  document.getElementById('adjLot').value = row.dataset.lot;
+  updateAdjCurrentQty();
+});
+
+document.getElementById('adjClearBtn').addEventListener('click', () => {
+  adjAC.reset();
+  document.getElementById('adjNewQty').value = '';
+  document.getElementById('adjNote').value = '';
+  document.getElementById('adjDate').value = todayStr();
+  document.getElementById('adjReason').value = 'นับสต็อกไม่ตรง';
+  populateAdjLots(null);
+});
+
+document.getElementById('adjSubmitBtn').addEventListener('click', async () => {
+  const p = adjAC.getSelected();
+  if(!p){ showToast('กรุณาเลือกสินค้าจากรายการ', true); return; }
+  const lotVal = document.getElementById('adjLot').value.trim();
+  const newQtyRaw = document.getElementById('adjNewQty').value;
+  const newQty = parseFloat(newQtyRaw);
+  const date = document.getElementById('adjDate').value;
+  if(!date){ showToast('กรุณาระบุวันที่ปรับสต็อก', true); return; }
+  if(newQtyRaw === '' || isNaN(newQty) || newQty < 0){ showToast('กรุณาระบุยอดที่ถูกต้องให้มากกว่าหรือเท่ากับ 0', true); return; }
+
+  const currentBal = getLotBalance(p.id, lotVal);
+  const diff = round2(newQty - currentBal);
+  if(diff === 0){ showToast('ยอดที่กรอกเท่ากับยอดในระบบอยู่แล้ว ไม่มีอะไรต้องปรับ'); return; }
+
+  const reason = document.getElementById('adjReason').value;
+  const note = document.getElementById('adjNote').value.trim();
+  const tx = {
+    id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    type: diff > 0 ? 'in' : 'out',
+    productId: p.id,
+    productName: p.name,
+    unit: p.unit,
+    qty: Math.abs(diff),
+    lot: lotVal,
+    date: date,
+    note: note ? `${reason} — ${note}` : reason,
+    timestamp: new Date().toISOString(),
+    adjustment: true,
+    source: 'adjust'
+  };
+  if(tx.type === 'out') tx.reason = 'ปรับยอด';
+  TRANSACTIONS.push(tx);
+  await saveTransactions();
+  showToast(`ปรับสต็อก "${p.name}"${lotVal?` LOT ${lotVal}`:''} เป็น ${fmt(newQty)} ${p.unit||''} สำเร็จ (${diff>0?'รับเข้า +':'ตัดออก −'}${fmt(Math.abs(diff))} ${p.unit||''})`);
+  document.getElementById('adjClearBtn').click();
+  renderAll();
+});
+
+function renderAdjustHistory(){
+  const tbody = document.getElementById('adjHistTableBody');
+  const empty = document.getElementById('adjHistEmpty');
+  if(!tbody) return;
+  const list = [...TRANSACTIONS].filter(t => t.adjustment && t.source === 'adjust').reverse().slice(0, 50);
+  if(list.length === 0){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map(t => `
+    <tr>
+      <td>${formatDate(t.date)}</td>
+      <td><span class="badge ${t.type==='in'?'badge-in':'badge-outb'}">${t.type==='in'?'รับเข้า':'ตัดออก'}</span></td>
+      <td class="mono">${escapeHtml(t.productId)}</td>
+      <td>${escapeHtml(t.productName)}</td>
+      <td>${escapeHtml(t.lot||'-')}</td>
+      <td class="num">${t.type==='in'?'+':'−'}${fmt(t.qty)} ${escapeHtml(t.unit||'')}</td>
+      <td>${escapeHtml(t.note || t.reason || '-')}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="deleteTx('${t.id}')">ลบ</button></td>
+    </tr>`).join('');
+}
+
 function renderAll(){
   renderDashboard();
   renderHistory();
@@ -3408,6 +3956,8 @@ function renderAll(){
   renderWR();
   populateInPoOptions();
   populateOutWrOptions();
+  renderCountHistory();
+  renderAdjustHistory();
   populateLocationDropdowns();
 }
 
