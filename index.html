@@ -618,12 +618,16 @@ tr:hover td{background:#FCF9F4;}
       <div class="topbar">
         <div>
           <h1 class="page-title">นับสต็อก</h1>
-          <p class="page-sub">เพิ่มสินค้าที่ต้องการนับ กรอกยอดที่นับได้จริง ระบบจะเทียบกับยอดในระบบและปรับยอดให้อัตโนมัติเมื่อบันทึก</p>
+          <p class="page-sub">เพิ่มสินค้าที่ต้องการนับ กรอกยอดที่นับได้จริง — เป็นการบันทึกผลนับไว้เฉยๆ ยังไม่มีผลกับยอดสต็อก ไปที่หน้า "ปรับสต็อก" เพื่อดึงยอดที่นับมาปรับสต็อกจริง</p>
         </div>
       </div>
       <div class="panel">
         <span class="section-tag">รอบนับสต็อกใหม่</span>
         <div class="form-grid">
+          <div class="field">
+            <label>เลขที่เอกสาร</label>
+            <input type="text" id="countNo" placeholder="เว้นว่างให้ระบบสร้างอัตโนมัติ">
+          </div>
           <div class="field">
             <label>วันที่นับ *</label>
             <input type="date" id="countDate">
@@ -633,11 +637,12 @@ tr:hover td{background:#FCF9F4;}
             <input type="text" id="countNote" placeholder="ไม่บังคับ เช่น นับประจำเดือน / นับก่อนปิดยอด">
           </div>
           <div class="field full">
-            <label>รายการสินค้าที่นับ * <span style="font-weight:400;text-transform:none;">(ยอดตามระบบจะขึ้นให้อัตโนมัติเมื่อเลือกสินค้า)</span></label>
+            <label>รายการสินค้าที่นับ * <span style="font-weight:400;text-transform:none;">(ระบุ LOT ได้ถ้าต้องการนับแยกตาม LOT — ยอดตามระบบจะขึ้นให้อัตโนมัติ)</span></label>
             <div id="countItemRows"></div>
             <button type="button" class="btn btn-ghost btn-sm" id="countAddItemBtn" style="margin-top:4px;">+ เพิ่มสินค้า</button>
           </div>
         </div>
+        <div class="small-note">การนับสต็อกเป็นการบันทึกผลไว้เป็นหลักฐานเท่านั้น <strong>ยังไม่ตัด/ไม่รับเข้าสต็อกจริง</strong> — เมื่อบันทึกแล้วให้ไปที่หน้า "ปรับสต็อก" เพื่ออ้างอิงรอบนับนี้และปรับยอดสต็อกจริงอีกครั้ง</div>
         <div class="btn-row">
           <button class="btn btn-ghost" id="countClearBtn">ล้างฟอร์ม</button>
           <button class="btn btn-primary" id="countSubmitBtn">บันทึกผลนับสต็อก</button>
@@ -646,10 +651,10 @@ tr:hover td{background:#FCF9F4;}
 
       <div class="panel">
         <div class="panel-title">ประวัติการนับสต็อก</div>
-        <p class="panel-sub">ดูผลต่างที่พบและรายการปรับยอดที่เกิดจากการนับแต่ละรอบ</p>
+        <p class="panel-sub">ดูผลต่างที่พบในแต่ละรอบนับ (ไม่มีผลกับสต็อกจริงจนกว่าจะนำไปปรับสต็อก)</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th class="exp-cell"></th><th>วันที่นับ</th><th style="text-align:right">จำนวนรายการ</th><th style="text-align:right">รายการที่ต่างจากระบบ</th><th>หมายเหตุ</th><th></th></tr></thead>
+            <thead><tr><th class="exp-cell"></th><th>เลขที่เอกสาร</th><th>วันที่นับ</th><th style="text-align:right">จำนวนรายการ</th><th style="text-align:right">รายการที่ต่างจากระบบ</th><th>หมายเหตุ</th><th></th></tr></thead>
             <tbody id="countTableBody"></tbody>
           </table>
           <div class="empty-state" id="countEmpty" style="display:none">ยังไม่มีประวัติการนับสต็อก</div>
@@ -662,12 +667,23 @@ tr:hover td{background:#FCF9F4;}
       <div class="topbar">
         <div>
           <h1 class="page-title">ปรับสต็อก</h1>
-          <p class="page-sub">แก้ไขยอดคงเหลือของสินค้า/LOT ให้ตรงกับยอดจริง ระบบจะคำนวณส่วนต่างและบันทึกรับเข้า/ตัดออกให้อัตโนมัติ</p>
+          <p class="page-sub">แก้ไขยอดคงเหลือของสินค้า/LOT ให้ตรงกับยอดจริง — อ้างอิงยอดจากรอบนับสต็อกได้ ระบบจะคำนวณส่วนต่างและบันทึกรับเข้า/ตัดออกให้อัตโนมัติ</p>
         </div>
       </div>
       <div class="panel" style="max-width:640px">
         <span class="section-tag">แบบฟอร์มปรับสต็อก</span>
         <div class="form-grid">
+          <div class="field full">
+            <label>อ้างอิงจากการนับสต็อก <span style="font-weight:400;text-transform:none;">(ไม่บังคับ — เลือกเพื่อดึงสินค้า/LOT/ยอดที่นับไว้มาปรับ)</span></label>
+            <select id="adjCountRef">
+              <option value="">— ไม่อ้างอิงการนับสต็อก —</option>
+            </select>
+            <span class="hint" id="adjCountHint"></span>
+          </div>
+          <div class="field full" id="adjCountItemWrap" style="display:none;">
+            <label>เลือกรายการตามการนับสต็อก *</label>
+            <select id="adjCountItemRef"></select>
+          </div>
           <div class="field full ac-wrap">
             <label>สินค้า *</label>
             <input type="text" id="adjProductSearch" placeholder="พิมพ์ชื่อหรือรหัสสินค้า..." autocomplete="off">
@@ -1329,7 +1345,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if(view === 'stockin') populateInPoOptions();
     if(view === 'stockout'){ populateOutWrOptions(); }
     if(view === 'count') renderCountHistory();
-    if(view === 'adjust') renderAdjustHistory();
+    if(view === 'adjust'){ populateAdjCountOptions(); renderAdjustHistory(); }
     if(view === 'locations') renderLocations();
   });
 });
@@ -3589,6 +3605,25 @@ function updateCountRowDiff(row){
   diffInput.style.fontWeight = diff !== 0 ? '600' : '400';
 }
 
+/* Refreshes a row's "ยอดตามระบบ" using the LOT typed in, falling back to the
+   product's total balance across all LOTs when the LOT field is blank. */
+function updateCountRowSysQty(row){
+  const rowId = row.dataset.rowId;
+  const ac = countItemAcMap.get(rowId);
+  const p = ac ? ac.getSelected() : null;
+  const sysqtyInput = row.querySelector('.count-item-sysqty');
+  if(!p){
+    sysqtyInput.dataset.value = '0';
+    sysqtyInput.value = '';
+    return;
+  }
+  const lotVal = row.querySelector('.count-item-lot').value.trim();
+  const sysQty = lotVal ? getLotBalance(p.id, lotVal) : getProductSystemQty(p.id);
+  sysqtyInput.dataset.value = sysQty;
+  sysqtyInput.value = `${fmt(sysQty)} ${p.unit || ''}`.trim();
+  updateCountRowDiff(row);
+}
+
 function addCountItemRow(){
   const rowId = 'countrow' + (countRowCounter++);
   const wrap = document.getElementById('countItemRows');
@@ -3597,9 +3632,12 @@ function addCountItemRow(){
   row.dataset.rowId = rowId;
   row.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;position:relative;flex-wrap:wrap;';
   row.innerHTML = `
-    <div class="field" style="flex:2 1 220px;margin-bottom:0;">
+    <div class="field" style="flex:2 1 200px;margin-bottom:0;">
       <input type="text" class="count-item-search" id="${rowId}_search" placeholder="พิมพ์ชื่อหรือรหัสสินค้า..." autocomplete="off">
       <div class="ac-list" id="${rowId}_ac"></div>
+    </div>
+    <div class="field" style="flex:0 0 110px;margin-bottom:0;">
+      <input type="text" class="count-item-lot" placeholder="LOT (ไม่บังคับ)">
     </div>
     <div class="field" style="flex:0 0 130px;margin-bottom:0;">
       <input type="text" class="count-item-sysqty" placeholder="ยอดตามระบบ" readonly style="text-align:right;background:var(--cream);" data-value="0">
@@ -3616,25 +3654,17 @@ function addCountItemRow(){
     <button type="button" class="btn btn-ghost btn-sm count-item-remove-btn" style="flex:0 0 auto;height:41px;">✕</button>
   `;
   wrap.appendChild(row);
-  const sysqtyInput = row.querySelector('.count-item-sysqty');
+  const lotInput = row.querySelector('.count-item-lot');
   const unitInput = row.querySelector('.count-item-unit');
   const qtyInput = row.querySelector('.count-item-qty');
-  const diffInput = row.querySelector('.count-item-diff');
   const ac = setupAutocomplete(`${rowId}_search`, `${rowId}_ac`, null, (p) => {
-    if(p){
-      const sysQty = getProductSystemQty(p.id);
-      sysqtyInput.dataset.value = sysQty;
-      sysqtyInput.value = `${fmt(sysQty)} ${p.unit || ''}`.trim();
-      unitInput.value = p.unit || '';
-    } else {
-      sysqtyInput.dataset.value = '0';
-      sysqtyInput.value = '';
-      unitInput.value = '';
-    }
+    lotInput.value = '';
+    unitInput.value = p ? (p.unit || '') : '';
     qtyInput.value = '';
-    updateCountRowDiff(row);
+    updateCountRowSysQty(row);
   });
   countItemAcMap.set(rowId, ac);
+  lotInput.addEventListener('input', () => updateCountRowSysQty(row));
   qtyInput.addEventListener('input', () => updateCountRowDiff(row));
   row.querySelector('.count-item-remove-btn').addEventListener('click', () => {
     countItemAcMap.delete(rowId);
@@ -3651,7 +3681,15 @@ function resetCountItemRows(){
 }
 resetCountItemRows();
 
+function generateCountNo(dateStr){
+  const d = (dateStr || todayStr());
+  const compact = d.replace(/-/g,'').slice(2); // yymmdd
+  const countToday = STOCK_COUNTS.filter(c => c.countDate === d).length + 1;
+  return `CNT-${compact}-${String(countToday).padStart(2,'0')}`;
+}
+
 document.getElementById('countClearBtn').addEventListener('click', () => {
+  document.getElementById('countNo').value = '';
   document.getElementById('countNote').value = '';
   document.getElementById('countDate').value = todayStr();
   resetCountItemRows();
@@ -3667,48 +3705,31 @@ document.getElementById('countSubmitBtn').addEventListener('click', async () => 
     const rowId = row.dataset.rowId;
     const ac = countItemAcMap.get(rowId);
     const p = ac ? ac.getSelected() : null;
+    const lot = row.querySelector('.count-item-lot').value.trim();
     const qtyInput = row.querySelector('.count-item-qty');
     const qtyRaw = qtyInput.value;
-    const hasAny = p || (qtyRaw !== '' && qtyRaw !== null);
+    const hasAny = p || lot || (qtyRaw !== '' && qtyRaw !== null);
     if(!hasAny) continue;
     if(!p){ showToast('กรุณาเลือกสินค้าให้ครบทุกแถวที่กรอกจำนวน', true); return; }
     if(qtyRaw === '' || qtyRaw === null){ showToast(`กรุณาระบุยอดที่นับได้ของ "${p.name}"`, true); return; }
     const counted = parseFloat(qtyRaw);
     if(isNaN(counted) || counted < 0){ showToast(`ยอดที่นับได้ของ "${p.name}" ไม่ถูกต้อง`, true); return; }
-    const systemQty = getProductSystemQty(p.id);
-    items.push({ productId: p.id, productName: p.name, unit: p.unit, systemQty: round2(systemQty), countedQty: round2(counted), diff: round2(counted - systemQty) });
+    const systemQty = lot ? getLotBalance(p.id, lot) : getProductSystemQty(p.id);
+    items.push({ productId: p.id, productName: p.name, unit: p.unit, lot: lot, systemQty: round2(systemQty), countedQty: round2(counted), diff: round2(counted - systemQty) });
   }
   if(items.length === 0){ showToast('กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ', true); return; }
-  const productIdsLower = items.map(it => it.productId.toLowerCase());
-  if(new Set(productIdsLower).size !== productIdsLower.length){ showToast('มีสินค้าซ้ำกันในรอบนับเดียวกัน กรุณาแก้ไข', true); return; }
+  const dupKeys = items.map(it => `${it.productId.toLowerCase()}::${it.lot.toLowerCase()}`);
+  if(new Set(dupKeys).size !== dupKeys.length){ showToast('มีสินค้า/LOT ซ้ำกันในรอบนับเดียวกัน กรุณาแก้ไข', true); return; }
 
+  let countNo = document.getElementById('countNo').value.trim();
+  if(!countNo) countNo = generateCountNo(date);
   const note = document.getElementById('countNote').value.trim();
   const countId = 'cnt_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-
-  items.forEach(it => {
-    if(it.diff === 0) return;
-    const tx = {
-      id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-      type: it.diff > 0 ? 'in' : 'out',
-      productId: it.productId,
-      productName: it.productName,
-      unit: it.unit,
-      qty: Math.abs(it.diff),
-      lot: '',
-      date: date,
-      note: `ปรับยอดจากการนับสต็อกวันที่ ${formatDate(date)}${note ? ' — ' + note : ''}`,
-      timestamp: new Date().toISOString(),
-      adjustment: true,
-      source: 'count',
-      countId: countId
-    };
-    if(tx.type === 'out') tx.reason = 'ปรับยอด';
-    TRANSACTIONS.push(tx);
-  });
 
   const diffItems = items.filter(it => it.diff !== 0).length;
   const countRec = {
     id: countId,
+    countNo: countNo,
     countDate: date,
     items: items,
     note: note,
@@ -3716,9 +3737,8 @@ document.getElementById('countSubmitBtn').addEventListener('click', async () => 
   };
   STOCK_COUNTS.push(countRec);
 
-  await saveTransactions();
   await saveStockCounts();
-  showToast(`บันทึกผลนับสต็อกสำเร็จ ${items.length} รายการ (พบผลต่าง ${diffItems} รายการ และปรับยอดให้แล้ว)`);
+  showToast(`บันทึกผลนับสต็อก ${countNo} สำเร็จ ${items.length} รายการ (พบผลต่าง ${diffItems} รายการ — ยังไม่มีผลกับสต็อกจนกว่าจะไปปรับสต็อก)`);
   document.getElementById('countClearBtn').click();
   renderAll();
 });
@@ -3739,11 +3759,12 @@ function renderCountHistory(){
     const diffCount = c.items.filter(it => it.diff !== 0).length;
     const isOpen = expandedCounts.has(c.id);
     const itemBody = `<table class="lot-subtable">
-        <thead><tr><th>รหัสสินค้า</th><th>ชื่อสินค้า</th><th style="text-align:right">ยอดตามระบบ (ตอนนับ)</th><th style="text-align:right">นับได้จริง</th><th style="text-align:right">ผลต่าง</th></tr></thead>
+        <thead><tr><th>รหัสสินค้า</th><th>ชื่อสินค้า</th><th>LOT</th><th style="text-align:right">ยอดตามระบบ (ตอนนับ)</th><th style="text-align:right">นับได้จริง</th><th style="text-align:right">ผลต่าง</th></tr></thead>
         <tbody>${c.items.map(it => `
           <tr>
             <td class="mono">${escapeHtml(it.productId)}</td>
             <td>${escapeHtml(it.productName)}</td>
+            <td class="mono">${it.lot ? escapeHtml(it.lot) : 'ไม่ระบุ'}</td>
             <td class="num">${fmt(it.systemQty)} ${escapeHtml(it.unit||'')}</td>
             <td class="num">${fmt(it.countedQty)} ${escapeHtml(it.unit||'')}</td>
             <td class="num"${it.diff!==0?` style="color:${it.diff>0?'var(--ok)':'var(--danger)'};font-weight:600;"`:''}>${it.diff>0?'+':''}${fmt(it.diff)}</td>
@@ -3755,6 +3776,7 @@ function renderCountHistory(){
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
           </span>
         </td>
+        <td class="mono">${escapeHtml(c.countNo || '-')}</td>
         <td>${formatDate(c.countDate)}</td>
         <td class="num">${c.items.length}</td>
         <td class="num">${diffCount ? `<span style="color:var(--warn);font-weight:600;">${diffCount}</span>` : '0'}</td>
@@ -3762,7 +3784,7 @@ function renderCountHistory(){
         <td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="deleteStockCount('${c.id}')">ลบ</button></td>
       </tr>
       <tr class="lot-subrow ${isOpen?'open':''}" data-count-subrow-id="${escapeHtml(c.id)}">
-        <td colspan="6">${itemBody}</td>
+        <td colspan="7">${itemBody}</td>
       </tr>`;
   }).join('');
 }
@@ -3776,12 +3798,13 @@ document.getElementById('countTableBody').addEventListener('click', (e) => {
 async function deleteStockCount(id){
   const c = STOCK_COUNTS.find(x => x.id === id);
   if(!c) return;
-  const ok = confirm(`ลบประวัติการนับสต็อกวันที่ ${formatDate(c.countDate)} ใช่หรือไม่?\n(รายการปรับยอดสต็อกที่เกิดจากรอบนับนี้จะยังคงอยู่ในประวัติการทำรายการตามปกติ)`);
+  const ok = confirm(`ลบประวัติการนับสต็อก ${c.countNo || ''} วันที่ ${formatDate(c.countDate)} ใช่หรือไม่?`);
   if(!ok) return;
   STOCK_COUNTS = STOCK_COUNTS.filter(x => x.id !== id);
   await saveStockCounts();
   showToast('ลบประวัติการนับสต็อกแล้ว');
   renderCountHistory();
+  populateAdjCountOptions();
 }
 
 /* ============ STOCK ADJUST ============ */
@@ -3877,12 +3900,75 @@ document.getElementById('adjLotTableBody').addEventListener('click', (e) => {
   updateAdjCurrentQty();
 });
 
+/* Reference a saved stock-count document to pull its product/LOT/counted qty
+   straight into the adjustment form. */
+function populateAdjCountOptions(preselectId){
+  const sel = document.getElementById('adjCountRef');
+  if(!sel) return;
+  const current = preselectId || sel.value;
+  const list = [...STOCK_COUNTS].sort((a,b) => (b.countDate||'').localeCompare(a.countDate||'') || (b.createdAt||'').localeCompare(a.createdAt||''));
+  sel.innerHTML = '<option value="">— ไม่อ้างอิงการนับสต็อก —</option>' + list.map(c => {
+    const diffCount = c.items.filter(it => it.diff !== 0).length;
+    return `<option value="${escapeHtml(c.id)}">${escapeHtml(c.countNo || c.id)} · ${formatDate(c.countDate)} · ${c.items.length} รายการ${diffCount ? ` · ต่าง ${diffCount} รายการ` : ' · ตรงทั้งหมด'}</option>`;
+  }).join('');
+  if(current && list.some(c => c.id === current)) sel.value = current;
+}
+
+/* Product search is locked whenever a stock-count reference is active, since
+   it drives the product/LOT selection automatically. */
+function syncAdjProductLock(){
+  const locked = !!document.getElementById('adjCountRef').value;
+  document.getElementById('adjProductSearch').disabled = locked;
+  document.getElementById('adjLot').disabled = locked || !adjAC.getSelected();
+}
+
+document.getElementById('adjCountRef').addEventListener('change', () => {
+  const countId = document.getElementById('adjCountRef').value;
+  const hint = document.getElementById('adjCountHint');
+  const itemWrap = document.getElementById('adjCountItemWrap');
+  const itemSel = document.getElementById('adjCountItemRef');
+  if(!countId){
+    hint.textContent = '';
+    itemWrap.style.display = 'none';
+    itemSel.innerHTML = '';
+    itemSel.onchange = null;
+    syncAdjProductLock();
+    return;
+  }
+  const c = STOCK_COUNTS.find(x => x.id === countId);
+  if(!c) return;
+  itemWrap.style.display = 'block';
+  itemSel.innerHTML = c.items.map((it,idx) => `<option value="${idx}">${escapeHtml(it.productName)} (${escapeHtml(it.productId)})${it.lot?` · LOT ${escapeHtml(it.lot)}`:' · ไม่ระบุ LOT'} — นับได้ ${fmt(it.countedQty)} ${escapeHtml(it.unit||'')}${it.diff!==0?` · ต่างจากระบบตอนนับ ${it.diff>0?'+':''}${fmt(it.diff)}`:' · ตรงกับระบบตอนนับ'}</option>`).join('');
+
+  function applyItem(it){
+    const p = PRODUCT_MAP[it.productId];
+    if(p) adjAC.forceSelect(p);
+    populateAdjLots(p);
+    document.getElementById('adjLot').value = it.lot || '';
+    document.getElementById('adjNewQty').value = it.countedQty;
+    updateAdjCurrentQty();
+    syncAdjProductLock();
+    hint.innerHTML = `จากรอบนับ ${escapeHtml(c.countNo || c.id)} วันที่ ${formatDate(c.countDate)} — นับได้ ${fmt(it.countedQty)} ${escapeHtml(it.unit||'')}${it.lot?` (LOT ${escapeHtml(it.lot)})`:' (ไม่ระบุ LOT)'}`;
+  }
+
+  if(c.items.length){
+    itemSel.value = '0';
+    applyItem(c.items[0]);
+  }
+  itemSel.onchange = () => {
+    const chosen = c.items[Number(itemSel.value)];
+    if(chosen) applyItem(chosen);
+  };
+});
+
 document.getElementById('adjClearBtn').addEventListener('click', () => {
   adjAC.reset();
   document.getElementById('adjNewQty').value = '';
   document.getElementById('adjNote').value = '';
   document.getElementById('adjDate').value = todayStr();
   document.getElementById('adjReason').value = 'นับสต็อกไม่ตรง';
+  document.getElementById('adjCountRef').value = '';
+  document.getElementById('adjCountRef').dispatchEvent(new Event('change'));
   populateAdjLots(null);
 });
 
@@ -3902,6 +3988,11 @@ document.getElementById('adjSubmitBtn').addEventListener('click', async () => {
 
   const reason = document.getElementById('adjReason').value;
   const note = document.getElementById('adjNote').value.trim();
+  const countId = document.getElementById('adjCountRef').value || null;
+  const count = countId ? STOCK_COUNTS.find(c => c.id === countId) : null;
+  const noteParts = [reason];
+  if(count) noteParts.push(`อ้างอิงนับสต็อก ${count.countNo || count.id}`);
+  if(note) noteParts.push(note);
   const tx = {
     id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
     type: diff > 0 ? 'in' : 'out',
@@ -3911,10 +4002,12 @@ document.getElementById('adjSubmitBtn').addEventListener('click', async () => {
     qty: Math.abs(diff),
     lot: lotVal,
     date: date,
-    note: note ? `${reason} — ${note}` : reason,
+    note: noteParts.join(' — '),
     timestamp: new Date().toISOString(),
     adjustment: true,
-    source: 'adjust'
+    source: 'adjust',
+    countId: count ? count.id : null,
+    countNo: count ? count.countNo : ''
   };
   if(tx.type === 'out') tx.reason = 'ปรับยอด';
   TRANSACTIONS.push(tx);
@@ -3943,7 +4036,7 @@ function renderAdjustHistory(){
       <td>${escapeHtml(t.productName)}</td>
       <td>${escapeHtml(t.lot||'-')}</td>
       <td class="num">${t.type==='in'?'+':'−'}${fmt(t.qty)} ${escapeHtml(t.unit||'')}</td>
-      <td>${escapeHtml(t.note || t.reason || '-')}</td>
+      <td>${escapeHtml(t.note || t.reason || '-')}${t.countNo ? `<br><span class="hint" style="margin-top:2px;">อ้างอิงนับสต็อก ${escapeHtml(t.countNo)}</span>` : ''}</td>
       <td><button class="btn btn-ghost btn-sm" onclick="deleteTx('${t.id}')">ลบ</button></td>
     </tr>`).join('');
 }
@@ -3957,6 +4050,7 @@ function renderAll(){
   populateInPoOptions();
   populateOutWrOptions();
   renderCountHistory();
+  populateAdjCountOptions();
   renderAdjustHistory();
   populateLocationDropdowns();
 }
