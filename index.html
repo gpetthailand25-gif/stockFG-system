@@ -13659,7 +13659,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 </script>
 
 <!-- ============================================================
-     SHARED STORAGE (Firebase Firestore)
+     SHARED STORAGE (Firebase Firestore + Anonymous Auth)
      ------------------------------------------------------------
      The app's data layer (below) calls window.storage.get/set — that
      API only exists inside a Claude.ai Artifact. To host this file
@@ -13668,53 +13668,80 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
      window.storage with an equivalent backed by a free Firebase
      Firestore database. Nothing else in the app needed to change.
 
+     Every visitor is signed in anonymously (no login screen, happens
+     automatically) purely so Firestore rules can require "must be a
+     real signed-in client" instead of allowing literally anyone.
+
      SETUP (about 5 minutes, one time):
      1. Go to https://console.firebase.google.com → "Add project"
         (name it anything, e.g. "fg-warehouse") → create it.
      2. In the project, click the "</>" (Web) icon to register a web
         app → copy the firebaseConfig object it shows you.
      3. Paste your config over FIREBASE_CONFIG below.
-     4. In the left sidebar go to Build → Firestore Database → Create
-        database → start in "test mode" (or use the rules note below).
-     5. Save this file and re-upload/push it to GitHub Pages.
+     4. Build → Firestore Database → Create database (any mode; rules
+        below override it anyway).
+     5. Build → Authentication → Sign-in method → enable "Anonymous".
+     6. Firestore → Rules → paste this, then Publish:
+          rules_version = '2';
+          service cloud.firestore {
+            match /databases/{database}/documents {
+              match /{document=**} {
+                allow read, write: if request.auth != null;
+              }
+            }
+          }
+     7. Save this file and re-upload/push it to GitHub Pages.
 
-     SECURITY NOTE: "test mode" rules let ANYONE with the project's
-     config read/write this database — fine for an internal tool with
-     a non-public URL, but if you want real protection, in Firestore
-     → Rules, restrict access (e.g. require Firebase Auth) instead of:
-       allow read, write: if true;
+     SECURITY NOTE: this stops randoms who don't open the page at all,
+     but anyone who DOES open the page still gets a valid anon token
+     (by design — there's no login form) and could poke the database
+     via dev tools. That's normal for an internal tool without a real
+     login system. For real per-person access control you'd need
+     actual user accounts (email/password or Google sign-in) checked
+     in the rules — say the word if you want that instead.
   ============================================================= -->
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script>
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBrplN8DTcURtwSkkhz7lvh-18EAmxGUKY",
-  authDomain: "stockfg-innova.firebaseapp.com",
-  projectId: "stockfg-innova",
-  storageBucket: "stockfg-innova.firebasestorage.app",
-  messagingSenderId: "626962219715",
-  appId: "1:626962219715:web:e10c689e981b14caff9876",
-  measurementId: "G-JZL672HN6Z"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 const FIRESTORE_COLLECTION = 'fg_stock_storage';
 
-let _storageReady = false;
 let _db = null;
+let _authReadyResolve;
+const _authReady = new Promise(res => { _authReadyResolve = res; });
+
 if(FIREBASE_CONFIG.apiKey === "YOUR_API_KEY"){
   console.warn('Firebase ยังไม่ได้ตั้งค่า — แก้ FIREBASE_CONFIG ในไฟล์นี้ก่อน ไม่งั้นข้อมูลจะไม่ถูกบันทึกถาวร');
+  _authReadyResolve(false);
 } else {
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
     _db = firebase.firestore();
-    _storageReady = true;
+    firebase.auth().onAuthStateChanged(user => {
+      if(user){ _authReadyResolve(true); }
+    });
+    firebase.auth().signInAnonymously().catch(e => {
+      console.error('เข้าสู่ระบบ (anonymous) ไม่สำเร็จ — เช็คว่าเปิด Anonymous provider ใน Firebase Auth แล้วหรือยัง', e);
+      _authReadyResolve(false);
+    });
   }catch(e){
     console.error('เชื่อมต่อ Firebase ไม่สำเร็จ', e);
+    _authReadyResolve(false);
   }
 }
 
 window.storage = {
   async get(key){
-    if(!_storageReady) return null;
+    const ok = await _authReady;
+    if(!ok || !_db) return null;
     try{
       const doc = await _db.collection(FIRESTORE_COLLECTION).doc(key).get();
       if(!doc.exists) return null;
@@ -13726,8 +13753,9 @@ window.storage = {
     }
   },
   async set(key, value){
-    if(!_storageReady){
-      console.error('storage.set failed: Firebase ยังไม่ได้ตั้งค่า');
+    const ok = await _authReady;
+    if(!ok || !_db){
+      console.error('storage.set failed: Firebase/Auth ยังไม่พร้อม');
       return null;
     }
     try{
@@ -13743,10 +13771,12 @@ window.storage = {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
-  if(!_storageReady){
-    const el = document.getElementById('lastUpdate');
-    if(el) el.textContent = 'ยังไม่ได้ตั้งค่าฐานข้อมูล — ดูคอมเมนต์บนสุดของไฟล์';
-  }
+  _authReady.then(ok => {
+    if(!ok){
+      const el = document.getElementById('lastUpdate');
+      if(el) el.textContent = 'ยังไม่ได้ตั้งค่าฐานข้อมูล/เข้าสู่ระบบ — ดูคอมเมนต์บนสุดของไฟล์';
+    }
+  });
 });
 </script>
 
